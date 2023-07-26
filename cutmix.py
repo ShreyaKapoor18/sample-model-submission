@@ -1,12 +1,12 @@
+#%%
 import torch
-import torch.nn.functional as F
 import numpy as np
-import random
-import tensorflow as tf
 from tensorflow.keras.applications import EfficientNetB0
 from tensorflow.keras.layers import Input, Dense, GlobalAveragePooling2D
 from tensorflow.keras.models import Model
+from matplotlib import pyplot, image
 
+#%%
 def cutmix_data_augmentation(images, labels, alpha=1.0):
     """
     Applies CutMix data augmentation to a batch of images and their corresponding labels.
@@ -46,7 +46,7 @@ def cutmix_data_augmentation(images, labels, alpha=1.0):
 
     return images, new_labels
 
-
+#%%
 
 def create_efficientnet_b0(num_classes):
     """
@@ -71,6 +71,7 @@ def create_efficientnet_b0(num_classes):
 
     return model
 
+#%%
 # Example usage:
 # Create an EfficientNet-B0 model with 10 output classes
 num_classes = 10
@@ -83,9 +84,12 @@ efficientnet_b0_model.compile(optimizer='adam', loss='sparse_categorical_crossen
 #%%
 import brainscore
 neural_data = brainscore.get_assembly(name="dicarlo.MajajHong2015.public")
-
 stimulus_set = neural_data.attrs['stimulus_set']
 
-
+X = []
+for i in range(len(stimulus_set)):
+    stimulus_path = stimulus_set.get_stimulus(stimulus_set['stimulus_id'][i])
+    img = image.imread(stimulus_path)
+    X.append(img)
 
 # %%

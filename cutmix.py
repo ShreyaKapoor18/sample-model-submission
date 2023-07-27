@@ -1,11 +1,9 @@
 #%%
 import torch
 import numpy as np
-from tensorflow.keras.applications import EfficientNetB0
-from tensorflow.keras.layers import Input, Dense, GlobalAveragePooling2D
-from tensorflow.keras.models import Model
 from matplotlib import pyplot, image
 from sklearn.model_selection import train_test_split
+import json
 
 #%%
 def cutmix_data_augmentation(images, labels, alpha=1.0):
@@ -48,39 +46,11 @@ def cutmix_data_augmentation(images, labels, alpha=1.0):
     return images, new_labels
 
 #%%
+from PIL import Image
+import torch
+from torchvision import transforms
 
-def create_efficientnet_b0(num_classes):
-    """
-    Create a custom EfficientNet-B0 model with a given number of output classes.
-
-    Args:
-        num_classes (int): Number of output classes.
-
-    Returns:
-        A TensorFlow Keras model instance of EfficientNet-B0.
-    """
-    # Load the pre-trained EfficientNet-B0 model (without the top classification layers)
-    base_model = EfficientNetB0(weights='imagenet', include_top=False, input_tensor=Input(shape=(256, 256, 3)))
-
-    # Add custom classification layers on top
-    x = GlobalAveragePooling2D()(base_model.output)
-    x = Dense(128, activation='relu')(x)  # You can customize the number of units in this layer
-    outputs = Dense(num_classes, activation='softmax')(x)
-
-    # Create the final model
-    model = Model(inputs=base_model.input, outputs=outputs)
-
-    return model
-
-#%%
-# Example usage:
-# Create an EfficientNet-B0 model with 10 output classes
-num_classes = 8
-efficientnet_b0_model = create_efficientnet_b0(num_classes)
-
-# Compile the model with an optimizer, loss function, and metrics
-efficientnet_b0_model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
+from efficientnet_pytorch import EfficientNet
 # Now you can use the model for training or evaluation on your dataset
 #%%
 import brainscore
@@ -111,3 +81,26 @@ x_val, y_val = cutmix_data_augmentation(x_val, y_val)
 print(x_val.shape)
 
 x_train = np.concatenate(x_train, x_val)
+
+
+model = EfficientNet.from_pretrained('efficientnet-b0')
+
+tfms = transforms.Compose([transforms.Resize(224), transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),])
+
+img = tfms(Image.open(stimulus_path)).unsqueeze(0)
+print(img.shape) 
+
+labels_map = json.load(open('labels_map.txt'))
+labels_map = [labels_map[str(i)] for i in range(1000)]
+
+model.eval()
+with torch.no_grad():
+    outputs = model(img)
+
+
+# Print predictions
+print('-----')
+for idx in torch.topk(outputs, k=5).indices.squeeze(0).tolist():
+    prob = torch.softmax(outputs, dim=1)[0, idx].item()
+    print('{label:<75} ({p:.2f}%)'.format(label=labels_map[idx], p=prob*100))

@@ -5,6 +5,7 @@ from tensorflow.keras.applications import EfficientNetB0
 from tensorflow.keras.layers import Input, Dense, GlobalAveragePooling2D
 from tensorflow.keras.models import Model
 from matplotlib import pyplot, image
+from sklearn.model_selection import train_test_split
 
 #%%
 def cutmix_data_augmentation(images, labels, alpha=1.0):
@@ -29,8 +30,8 @@ def cutmix_data_augmentation(images, labels, alpha=1.0):
     # Generate random bounding box
     lam = np.random.beta(alpha, alpha)
     cut_ratio = np.sqrt(1.0 - lam)
-    cut_w = np.int(width * cut_ratio)
-    cut_h = np.int(height * cut_ratio)
+    cut_w = np.int64(width * cut_ratio)
+    cut_h = np.int64(height * cut_ratio)
     cx = np.random.randint(width)
     cy = np.random.randint(height)
 
@@ -59,7 +60,7 @@ def create_efficientnet_b0(num_classes):
         A TensorFlow Keras model instance of EfficientNet-B0.
     """
     # Load the pre-trained EfficientNet-B0 model (without the top classification layers)
-    base_model = EfficientNetB0(weights='imagenet', include_top=False, input_tensor=Input(shape=(224, 224, 3)))
+    base_model = EfficientNetB0(weights='imagenet', include_top=False, input_tensor=Input(shape=(256, 256, 3)))
 
     # Add custom classification layers on top
     x = GlobalAveragePooling2D()(base_model.output)
@@ -74,7 +75,7 @@ def create_efficientnet_b0(num_classes):
 #%%
 # Example usage:
 # Create an EfficientNet-B0 model with 10 output classes
-num_classes = 10
+num_classes = 8
 efficientnet_b0_model = create_efficientnet_b0(num_classes)
 
 # Compile the model with an optimizer, loss function, and metrics
@@ -85,7 +86,7 @@ efficientnet_b0_model.compile(optimizer='adam', loss='sparse_categorical_crossen
 import brainscore
 neural_data = brainscore.get_assembly(name="dicarlo.MajajHong2015.public")
 stimulus_set = neural_data.attrs['stimulus_set']
-
+y = stimulus_set['category_name']
 X = []
 for i in range(len(stimulus_set)):
     stimulus_path = stimulus_set.get_stimulus(stimulus_set['stimulus_id'][i])
@@ -93,3 +94,20 @@ for i in range(len(stimulus_set)):
     X.append(img)
 
 # %%
+X = np.array(X)
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+unique_categories = ['Cars', 'Tables', 'Faces', 'Fruits', 'Planes', 'Boats', 'Animals', 'Chairs']
+y_train.replace(unique_categories, list(range(8)), inplace=True)
+y_test.replace(unique_categories, list(range(8)), inplace=True)
+y_train = np.array(y_train)
+y_test = np.array(y_test)
+               
+# Only need a small batch of images to apply cutmax augmentation
+x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.1)
+
+x_val, y_val = cutmix_data_augmentation(x_val, y_val)
+
+print(x_val.shape)
+
+x_train = np.concatenate(x_train, x_val)

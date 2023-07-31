@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: model-template
+Version: 0.1.0
+Summary: An example project for adding brain or base model implementation
+Home-page: https://github.com/brain-score/brainscore_model_template
+Author: Franziska Geiger
+Author-email: fgeiger@mit.edu
+License: MIT license
+Keywords: brain-score template
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3.7

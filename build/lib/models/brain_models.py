@@ -1,7 +1,7 @@
+from model_tools.check_submission import check_models
 import torchvision.models
 from model_tools.activations.pytorch import PytorchWrapper
 from model_tools.activations.pytorch import load_preprocess_images
-import torchvision.transforms as transforms
 
 # This is an example implementation for submitting alexnet as a pytorch model
 # If you use pytorch, don't forget to add it to the setup.py
@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 # If the model requires a GPU, contact the brain-score team directly.
 from model_tools.check_submission import check_models
 import torch
-import torchvision.transforms as transforms
+
 """
 Template module for a brain model submission to brain-score
 """
@@ -39,12 +39,12 @@ def get_model(name):
     assert name == 'resnet50'
     model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet50', pretrained=True)
     preprocess = transforms.Compose([
+    transforms.Resize(256),
     transforms.CenterCrop(224),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    
-    wrapper = PytorchWrapper(identifier='resnet50', model=model, preprocessing=preprocess)
+    wrapper = PytorchWrapper(identifier='resnet50', model=model, preprocessing=preprocessing)
     wrapper.image_size = 256
 
     return wrapper

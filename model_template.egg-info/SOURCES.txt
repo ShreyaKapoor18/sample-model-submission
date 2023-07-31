@@ -1,0 +1,11 @@
+README.md
+setup.py
+model_template.egg-info/PKG-INFO
+model_template.egg-info/SOURCES.txt
+model_template.egg-info/dependency_links.txt
+model_template.egg-info/not-zip-safe
+model_template.egg-info/requires.txt
+model_template.egg-info/top_level.txt
+models/__init__.py
+models/base_models.py
+models/brain_models.py
